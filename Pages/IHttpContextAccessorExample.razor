@@ -1,0 +1,42 @@
+﻿@page "/ihttpcontextaccessor"
+@using AccessingAspnetCoreBaseUrl.ApiClients
+<PageTitle>Fetch from IHttpContextAccessor</PageTitle>
+
+<h1>IHttpContextAccessor Way</h1>
+<div>
+    <div>Let's use my <code>ValuesApiClient</code> to fetch our values, which uses the  <code>IHttpContextAccessor</code> to retrieve this value</div>
+    <div style="padding-top:2%">
+        <button @onclick="FetchApiData">Click to Fetch Data from ValuesController API Endpoint</button>
+        
+        @if (_fetchedData.Any())
+        {
+            <h3>Fetched Data</h3>
+            <table>
+                @foreach (var curValue in _fetchedData)
+                {
+                    <tr><td>@curValue</td></tr>
+                }
+            </table>
+        }
+        else
+        {
+            <h3>No Data Yet.</h3>
+        }
+    </div>
+</div>
+
+@code
+{
+    [Inject] IValuesApiClient ValuesApiClient { get; set; }
+    private List<string> _fetchedData = new();
+
+    // Let's fetch the current request / base url information from the injected NavigationManager
+    private async Task FetchApiData()
+    {
+        var results = await ValuesApiClient.GetValuesAsync();
+
+        _fetchedData.Clear();
+        if (results != null)
+            _fetchedData.AddRange(results);
+    }
+}

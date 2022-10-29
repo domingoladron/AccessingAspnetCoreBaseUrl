@@ -1,0 +1,50 @@
+﻿@page "/ihttpbaseurlaccessor"
+<PageTitle>Fetch from IHttpBaseUrlAccessor</PageTitle>
+
+<h1>IHttpBaseUrlAccessor Way</h1>
+<div>
+    <div>Let's Fetch the Base Url of our App from the current request using the <code>IHttpBaseUrlAccessor</code></div>
+    This makes use of the <code>builder.WebHost.GetSetting(WebHostDefaults.ServerUrlsKey)</code> in the <b>Program.cs</b>
+    <div style="padding-top:2%">
+        <button @onclick="FetchApiData">Click to Fetch Data from ValuesController API Endpoint</button>
+        
+        @if (_fetchedData.Any())
+        {
+            <h3>Fetched Data</h3>
+            <table>
+                @foreach (var curValue in _fetchedData)
+                {
+                    <tr><td>@curValue</td></tr>
+                }
+            </table>
+        }
+        else
+        {
+            <h3>No Data Yet.</h3>
+        }
+    </div>
+</div>
+
+@code
+{
+    [Inject] IHttpBaseUrlAccessor BaseUrlAccessor { get; set; }
+    private List<string> _fetchedData = new();
+
+    // Let's fetch the current request / base url information from the injected NavigationManager
+    private async Task FetchApiData()
+    {
+        var httpClient = new HttpClient();
+        var baseUrl = BaseUrlAccessor.GetHttpsUrl() ?? BaseUrlAccessor.GetHttpUrl();
+        if (baseUrl != null && !string.IsNullOrEmpty(baseUrl))
+        {
+            httpClient.BaseAddress = new Uri(baseUrl);
+            var results = await httpClient.GetAsync("values");
+
+            var valuesFoundFromApi = await results.Content.ReadFromJsonAsync<List<string>>();
+
+            _fetchedData.Clear();
+            if (valuesFoundFromApi != null)
+                _fetchedData.AddRange(valuesFoundFromApi);
+        }
+    }
+}
